@@ -1,6 +1,14 @@
-// Draw linegraph
-function drawGraph(data) {
+function processData() {
+  parseCSV();
+  if(typeof allData !== "undefined") {
+    drawGraph(calcYear(0));
+  } else {
+    setTimeout(processData, 1);
+  }
+}
 
+function drawGraph(data) {
+  console.log(data);
   var svg_width = 800;
   var svg_height = 600;
   margin = { top: 20, right: 50, bottom: 30, left: 50};
@@ -19,11 +27,11 @@ function drawGraph(data) {
 
   var line = d3.line()
     .x(function(d)
-        {return x(d.date)})
+        {return x(d[0])})
     .y(function(d)
-        {return y(d.value)})
-    x.domain(d3.extent(data, function(d) {return d.date}));
-    y.domain(d3.extent(data, function(d) {return d.value}));
+        {return y(d[1])})
+    x.domain(d3.extent(data, function(d) {return d[0]}));
+    y.domain(d3.extent(data, function(d) {return d[1]}));
 
   group.append("g")
     .attr("transform", "translate(0," + height + ")")

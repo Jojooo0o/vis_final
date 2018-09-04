@@ -8,7 +8,7 @@ var theYear = {January: "01", February: "02", March: "03", April: "04", May: "05
 
 var count = 0;
 
-var allData = [];
+var allData;
 
 
 function parseCSV() {
@@ -26,10 +26,10 @@ function parseCSV() {
         current_incident["Incident Date"] = rewriteDate(current_incident["Incident Date"]);
       }
     }
-
-    calcYear(0);
   }).catch(function(error) {
+    console.log("error occured during parsing");
   });
+  //return allData;
 }
 
 function rewriteDate(date) {
@@ -53,25 +53,25 @@ function calcYear(year) {
   var current_incident;
   var total_killed = 0;
   var total_injured = 0;
+  var date;
+  //console.log(current_month);
 
   for(var j = 0; j < allData[year].length; ++j) {
     current_incident = allData[year][j];
-
     // guarantees the last month to be taken
     if (j == allData[year].length - 1) {
       total_killed += parseInt(current_incident["# Killed"]);
       total_injured += parseInt(current_incident["# Injured"]);
-      year_data.push([total_killed, total_injured]);
-    } else if(current_incident["Incident Date"].includes(current_month)) {
-      total_killed += parseInt(current_incident["# Killed"]);
-      total_injured += parseInt(current_incident["# Injured"]);
-    } else {
-      year_data.push([total_killed, total_injured]);
+      year_data.push([date, total_killed, total_injured]);
+    } else if(!current_incident["Incident Date"].includes(current_month)){
+      year_data.push([date, total_killed, total_injured]);
       current_month = allData[year][j]["Incident Date"].match(new RegExp('-[0-1][0-9]-')).toString();
       total_killed = parseInt(current_incident["# Killed"]);
       total_injured = parseInt(current_incident["# Injured"]);
     }
+    total_killed += parseInt(current_incident["# Killed"]);
+    total_injured += parseInt(current_incident["# Injured"]);
+    date = current_incident["Incident Date"].match(new RegExp('[0-9]{4}-[0-1][0-9]'));
   }
-  
   return year_data;
 }
