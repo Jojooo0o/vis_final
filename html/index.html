@@ -4,10 +4,12 @@
   <meta charset="utf-8"/>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <!--<script src="../js/papaparse.min.js"-->
   <script src="../js/preprocessing.js"></script>
+  <script src="../js/linegraph.js"></script>
+  <link rel="stylesheet" href="../css/stylesheet.css">
 </head>
 <body onload="parseCSV()">
   <h1>Mass Shootings 2014 - 2017</h1>
+  <svg onload="drawGraph(allData)"></svg>
 </body>
 </html>
