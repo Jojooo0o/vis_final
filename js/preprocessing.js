@@ -23,7 +23,7 @@ function parseCSV() {
       for(var j = 0; j < allData[count].length; ++j) {
         var current_incident = allData[count][j];
         // Change Date for every data entry of ever dataset
-        current_incident["Incident Date"] = rewriteDate(current_incident["Incident Date"]);
+        //current_incident["Incident Date"] = rewriteDate(current_incident["Incident Date"]);
       }
     }
   }).catch(function(error) {
@@ -49,12 +49,12 @@ function rewriteDate(date) {
 // calculates year overview. Takes input number in datapath length to select year.
 function calcYear(year) {
   var year_data = [];
-  var current_month = allData[year][0]["Incident Date"].match(new RegExp('-[0-1][0-9]-')).toString();
+  //var current_month = allData[year][0]["Incident Date"].match(new RegExp('-[0-1][0-9]-')).toString();
+  var current_month = allData[year][0]["Incident Date"].match(new RegExp('[a-zA-Z]+'));
   var current_incident;
   var total_killed = 0;
   var total_injured = 0;
   var date;
-  //console.log(current_month);
 
   for(var j = 0; j < allData[year].length; ++j) {
     current_incident = allData[year][j];
@@ -65,13 +65,15 @@ function calcYear(year) {
       year_data.push([date, total_killed, total_injured]);
     } else if(!current_incident["Incident Date"].includes(current_month)){
       year_data.push([date, total_killed, total_injured]);
-      current_month = allData[year][j]["Incident Date"].match(new RegExp('-[0-1][0-9]-')).toString();
+      //current_month = allData[year][j]["Incident Date"].match(new RegExp('-[0-1][0-9]-')).toString();
+      current_month = allData[year][j]["Incident Date"].match(new RegExp('[a-zA-Z]+')).toString();
       total_killed = parseInt(current_incident["# Killed"]);
       total_injured = parseInt(current_incident["# Injured"]);
     }
     total_killed += parseInt(current_incident["# Killed"]);
     total_injured += parseInt(current_incident["# Injured"]);
-    date = current_incident["Incident Date"].match(new RegExp('[0-9]{4}-[0-1][0-9]'));
+    //date = current_incident["Incident Date"].match(new RegExp('[0-9]{4}-[0-1][0-9]'));
+    date = current_incident["Incident Date"].match(new RegExp('[a-zA-Z]+ [0-9]{1,2}, [0-9]{4}'));
   }
   return year_data;
 }

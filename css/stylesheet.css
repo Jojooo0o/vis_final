@@ -1,3 +1,9 @@
 .line-graph {
   border: 1px solid lightgray;
 }
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}

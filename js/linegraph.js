@@ -8,8 +8,7 @@ function processData() {
 }
 
 function drawGraph(data) {
-  console.log(data);
-  var svg_width = 800;
+  var svg_width = 1800;
   var svg_height = 600;
   margin = { top: 20, right: 50, bottom: 30, left: 50};
   var width = svg_width - margin.left - margin.right;
@@ -19,27 +18,43 @@ function drawGraph(data) {
     .attr("width", svg_width)
     .attr("height", svg_height);
 
-  var group = svg.append("g")
+  var g = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var x = d3.scaleTime().rangeRound([0, width]);
-  var y = d3.scaleLinear().rangeRound([height, 0]);
+  var parseDate = d3.timeParse("%B %d, %Y");
+  var formatDate = d3.timeFormat("%B");
 
-  var line = d3.line()
-    .x(function(d)
-        {return x(d[0])})
-    .y(function(d)
-        {return y(d[1])})
-    x.domain(d3.extent(data, function(d) {return d[0]}));
-    y.domain(d3.extent(data, function(d) {return d[1]}));
+  // var graphData = data.map(function(d) {
+  //   return {
+  //     date: formatDate(parseDate(d[0])),
+  //     killed: d[1],
+  //     injured: d[2]
+  //   }
+  // });
+  data.forEach(function(d) {
+    d.date = formatDate(parseDate(d[0]));
+    d.killed = +d[1];
+    d.injured = +d[2];
+  });
 
-  group.append("g")
-    .attr("transform", "translate(0," + height + ")")
+  var x = d3.scaleTime().range([0, width])
+    //.domain(d3.extent(graphData, function(d) {console.log(d.date); return d.date}));
+    .domain(d3.extent(data, function(d) {console.log(d.date); return d.date}));
+  var y = d3.scaleLinear().range([height, 0])
+    //.domain(d3.extent(graphData, function(d) {return d.injured}));
+    .domain(d3.extent(data, function(d) {return d.injured}));
+
+    var line = d3.line()
+    .x(function(d) {return x(d.date)})
+    .y(function(d) {return y(d.injured)});
+
+  g.append("g")
     .call(d3.axisBottom(x))
-    .select(".domain")
-    .remove();
+    .attr("transform", "translate(0," + height + ")")
+    .select(".domain");
+    //.remove();
 
-  group.append("g")
+  g.append("g")
     .call(d3.axisLeft(y))
     .append("text")
     .attr("fill", "#000")
@@ -48,4 +63,9 @@ function drawGraph(data) {
     .attr("dy", "0.71em")
     .attr("text-anchor", "end")
     .text("killed / injured");
+
+  g.append("path")
+    .datum(graphData)
+    .attr("class", "line")
+    .attr("d", line);
 }
