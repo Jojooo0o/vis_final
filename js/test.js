@@ -1,5 +1,6 @@
 var dataPaths = ["../data/mass_shootings_2014.csv", "../data/mass_shootings_2015.csv",
-                 "../data/mass_shootings_2016.csv", "../data/mass_shootings_2017.csv"];     // saves paths of data sets
+                 "../data/mass_shootings_2016.csv", "../data/mass_shootings_2017.csv",
+                 "../data/mass_shootings_2018.csv"];     // saves paths of data sets
 
 var lineColors = ["red", "blue", "green", "yellow"];
 
@@ -34,6 +35,7 @@ function test() {
     .defer(d3.csv, dataPaths[1])
     .defer(d3.csv, dataPaths[2])
     .defer(d3.csv, dataPaths[3])
+    //.defer(d3.csv, dataPaths[4])
     .awaitAll(function (error, d) {
       for(var i = 0; i < d.length; ++i) {
         for(var j = 0; j < d[i].length; ++j) {
@@ -51,6 +53,7 @@ function test() {
       var min = 0;
 
       for(var i = 0; i < d.length; ++i){
+        d[i] = calcYearOverview(d[i]);
         max = d3.max(d[i], function(data) { return data.injured + data.killed});
         min = d3.min(d[i], function(data) { return data.injured + data.killed});
         if(max_injured_killed < max) {
@@ -61,8 +64,9 @@ function test() {
         }
       }
 
+
       x.domain(d3.extent(d[0], function(data) { return data.date; }));
-      y.domain([min_injured_killed, max_injured_killed]);
+      y.domain([min_injured_killed - min_injured_killed*0.1, max_injured_killed]);
 
       svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -97,7 +101,22 @@ function test() {
 }
 
 function calcYearOverview(data) {
+  var current_month = data[0].date.getMonth();
+  var new_data = []
+  var current_day = data[0];
+  current_day.date.setDate(15);
   for(var i = 0; i < data.length; ++i) {
-    
+    if(data[i].date.getMonth() == current_month) {
+      current_day.killed += data[i].killed;
+      current_day.injured += data[i].injured;
+    } else {
+      new_data.push(current_day);
+      current_day = data[i];
+      current_day.date.setDate(1);
+      current_month = data[i].date.getMonth();
+    }
   }
+  new_data.push(current_day);
+
+  return new_data;
 }
