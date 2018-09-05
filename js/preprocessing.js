@@ -8,28 +8,47 @@ var theYear = {January: "01", February: "02", March: "03", April: "04", May: "05
 
 var count = 0;
 
-var allData;
+var allData = [];
 
 
 function parseCSV() {
-  Promise.all([d3.csv(dataPaths[0]),
-              d3.csv(dataPaths[1]),
-              d3.csv(dataPaths[2]),
-              d3.csv(dataPaths[3])])
-  .then(function(data) {
-    allData = data;
-    // Iterate over all Datasets
-    for(count = 0; count < dataPaths.length; ++count) {
-      for(var j = 0; j < allData[count].length; ++j) {
-        var current_incident = allData[count][j];
-        // Change Date for every data entry of ever dataset
-        //current_incident["Incident Date"] = rewriteDate(current_incident["Incident Date"]);
-      }
-    }
-  }).catch(function(error) {
-    console.log("error occured during parsing");
-  });
-  //return allData;
+
+  var parseTime = d3.timeParse("%B %d, %Y");
+  var formatTime = d3.timeFormat("%B");
+  for(i = 0; i < dataPaths.length; ++i) {
+    //console.log(i);
+    d3.csv(dataPaths[i], function(d) {
+      return {
+        date : formatTime(parseTime(d["Incident Date"])),
+        killed : +d["# Killed"],
+        injured : +d["# Injured"]
+      };
+    }, function(data) {
+      //console.log(dataPaths[i]);
+      //console.log(data);
+      allData.push(data);
+    });
+  }
+  // Promise.all([d3.csv(dataPaths[0]),
+  //             d3.csv(dataPaths[1]),
+  //             d3.csv(dataPaths[2]),
+  //             d3.csv(dataPaths[3])])
+  // .then(function(data) {
+  //   allData = data;
+  //   // Iterate over all Datasets
+  //   for(count = 0; count < dataPaths.length; ++count) {
+  //     for(var j = 0; j < allData[count].length; ++j) {
+  //       var current_incident = allData[count][j];
+  //       // Change Date for every data entry of ever dataset
+  //       //current_incident["Incident Date"] = rewriteDate(current_incident["Incident Date"]);
+  //     }
+  //   }
+  // }).catch(function(error) {
+  //   console.log("error occured during parsing");
+  // });
+  // //return allData;
+
+
 }
 
 function rewriteDate(date) {
@@ -49,6 +68,7 @@ function rewriteDate(date) {
 // calculates year overview. Takes input number in datapath length to select year.
 function calcYear(year) {
   var year_data = [];
+  //console.log(allData);
   //var current_month = allData[year][0]["Incident Date"].match(new RegExp('-[0-1][0-9]-')).toString();
   var current_month = allData[year][0]["Incident Date"].match(new RegExp('[a-zA-Z]+'));
   var current_incident;

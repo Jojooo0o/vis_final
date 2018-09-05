@@ -1,9 +1,13 @@
 function processData() {
   parseCSV();
+  setTimeout(10);
   if(typeof allData !== "undefined") {
+    console.log("Works!");
+    console.log(allData);
     drawGraph(calcYear(0));
   } else {
-    setTimeout(processData, 1);
+    console.log("Timeout to short");
+    //setTimeout(processData, 1);
   }
 }
 
