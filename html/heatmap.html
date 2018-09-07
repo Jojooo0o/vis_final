@@ -5,7 +5,7 @@
 <head>
   <style type="text/css">
     .states :hover {
-      filter: brightness(85%);
+      filter: brightness(90%);
     }
 
     .state-borders {
@@ -32,6 +32,7 @@
 
     function calculateGradientColor() {
 
+
     }
 
     // https://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object?page=1&tab=votes#tab-top
@@ -49,30 +50,21 @@
                      "../data/mass_shootings_2018.csv"];
 
     var incidents = [];
+    var names = {};
+    var activeYear = 3;
+
+    var max_incidents = -1;
 
     var svg = d3.select("svg");
 
-    // color gradient
-    var defs = svg.append("defs");
-    var linearGradient = defs.append("linearGradient")
-        .attr("id", "linear-gradient")
-        .attr("x1", "0%")
-        .attr("y1", "0%")
-        .attr("x2", "100%") // horizontal gradient
-        .attr("y2", "0%");
-
-    // start color (0%)
-    linearGradient.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", "#a1dfe4"); //light blue
-
-    // end color (100%)
-    linearGradient.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", "#275154"); //dark blue
-
-
     var path = d3.geoPath();
+
+    d3.tsv("../data/us-state-names.tsv", function(tsv) {
+      // extract just the names and Ids
+      tsv.forEach(function(d,i) {
+        names[+d.id] = d.name;
+      });
+    });
 
     d3.json("https://d3js.org/us-10m.v1.json", function(error, us) {
     if (error) throw error;
@@ -99,7 +91,7 @@
       // nest data by state
       for(var i = 0; i < d.length; ++i) {
         var incidentsByState = d3.nest()
-          .key(function(d) { return d.state; })
+          .key(function(d) { return d.state; }).sortKeys(d3.ascending)
           .rollup(function(s) { return {
             total_incidents: s.length, // amount of incidents in a state
             total_killed: d3.sum(s, function(d) { return d.killed; }),
@@ -114,7 +106,6 @@
 
       // calculate max amount of incidents
       var max = 0;
-      var max_incidents = -1;
       for(var i = 0; i < incidents.length; ++i){
         max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
         if(max_incidents < max) {
@@ -122,28 +113,43 @@
         }
       }
 
-      calculateGradientColor(max_incidents);
-
-      console.log(max_incidents);
+      console.log(names);
 
 
-      // var incidentsByState = d3.nest()
-      //   .key(function(d) { return d.state; })
-      //   .entries(data);
+      var colors = d3.scaleLinear()
+        .domain([0,max_incidents])
+        //.range(["#5E4FA2",  "#9E0142"]);
+        .range(["lightblue", "darkblue"]);
 
-      });
+      function calculateGradientColor(id) {
+        var id_num = parseInt(id);
+        var state = names[id_num];
 
-    svg.append("g")
-        .attr("class", "states")
-      .selectAll("path")
-      .data(topojson.feature(us, us.objects.states).features)
-      .enter().append("path")
-        .attr("d", path)
-        .attr("fill", "url(#linear-gradient)");
+        for (var i = 0; i < incidents[activeYear].length; ++i) {
+          if (incidents[activeYear][i].key == state) {
+            console.log("match: " + state);
+            console.log(incidents[activeYear][i].value.total_incidents);
+            return colors(incidents[activeYear][i].value.total_incidents);
+          }
+        }
+        return "lightgray"; // no incidents happened in the state
+      }
 
-    svg.append("path")
-        .attr("class", "state-borders")
-        .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
+      svg.append("g")
+          .attr("class", "states")
+        .selectAll("path")
+        .data(topojson.feature(us, us.objects.states).features)
+        .enter().append("path")
+          .attr("d", path)
+          .attr("fill", function(d) { return calculateGradientColor(d.id)});
+
+      svg.append("path")
+          .attr("class", "state-borders")
+          .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
+    });
+
+
+
     });
   </script>
 </body>
