@@ -301,8 +301,8 @@
               break;
             case 2:
               max = d3.max(incidents[i], function(data) { return data.value.total_injured});
-              color_min = "lightgreen";
-              color_max = "green";
+              color_min = "Aquamarine";
+              color_max = "LightSeaGreen";
               break;
             default:
               max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
@@ -310,6 +310,7 @@
               color_max = "darkblue";
               break;
           }
+
           if(max_stats < max) {
             max_stats = max;
           }
@@ -328,6 +329,7 @@
 
           for (var i = 0; i < incidents[activeYear].length; ++i) {
             if (incidents[activeYear][i].key == state) {
+              // calculate color of the current state by value
               switch (activeValue) {
                 case 1:
                   return colors(incidents[activeYear][i].value.total_killed);
@@ -351,9 +353,6 @@
           .enter().append("path")
             .attr("d", path)
             .attr("fill", function(d) { return calculateGradientColor(d.id) });
-            // .transition()
-            // .duration(300)
-            // .style("fill", function(d) { return calculateGradientColor(d.id) });
 
         svg.append("path")
             .attr("class", "state-borders")
