@@ -20,19 +20,141 @@
     .states {
       fill: lightgray;
     }
+
+
+    .content {
+      overflow: hidden;
+    }
+
+    menu {
+      float: left;
+      margin-left: 30px;
+    }
+
+    svg {
+      float: left;
+    }
+
+    /* radio buttons https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_custom_radio */
+    /* The container */
+    .container {
+        display: block;
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        font-size: 22px;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Hide the browser's default radio button */
+    .container input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    /* Create a custom radio button */
+    .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 25px;
+        width: 25px;
+        background-color: #eee;
+        border-radius: 50%;
+    }
+
+    /* On mouse-over, add a grey background color */
+    .container:hover input ~ .checkmark {
+        background-color: #ccc;
+    }
+
+    /* When the radio button is checked, add a blue background */
+    .container input:checked ~ .checkmark {
+        background-color: #2196F3;
+    }
+
+    /* Create the indicator (the dot/circle - hidden when not checked) */
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+    }
+
+    /* Show the indicator (dot/circle) when checked */
+    .container input:checked ~ .checkmark:after {
+        display: block;
+    }
+
+    /* Style the indicator (dot/circle) */
+    .container .checkmark:after {
+     	top: 9px;
+    	left: 9px;
+    	width: 8px;
+    	height: 8px;
+    	border-radius: 50%;
+    	background: white;
+    }
+</style>
   </style>
 </head>
-<body>
-  <h1>Mass Shootings per State</h1>
-  <svg width="960" height="600"></svg>
+<body onLoad="changeYear(0)">
+  <h1 id="header">Number of Mass Shootings per State in 2014</h1>
+  <div class="content">
+    <svg width="960" height="600"></svg>
+    <menu>
+      <h1>Years</h1>
+      <label class="container" onClick="changeYear(0)">2014
+        <input id="firstBtn" type="radio" checked="checked" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container" onClick="changeYear(1)">2015
+        <input type="radio" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container" onClick="changeYear(2)">2016
+        <input type="radio" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container" onClick="changeYear(3)">2017
+        <input type="radio" name="radio">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container" onClick="changeYear(4)">2018
+        <input type="radio" name="radio">
+        <span class="checkmark"></span>
+      </label>
+    </menu>
+    </div>
 
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://d3js.org/topojson.v2.min.js"></script>
   <script>
 
-    function calculateGradientColor() {
+    var dataPaths = ["../data/mass_shootings_2014.csv", "../data/mass_shootings_2015.csv",
+                     "../data/mass_shootings_2016.csv", "../data/mass_shootings_2017.csv",
+                     "../data/mass_shootings_2018.csv"];
+    var incidents = [];
+    var names = {};
+    var activeYear = 0;
 
+    function changeYear(year) {
+      var yearString = "";
+      activeYear = year;
 
+      if (activeYear == 0) {
+        document.getElementById("firstBtn").checked = true;
+      }
+
+      for (var i = 0; i <= year; ++i) {
+        yearString = dataPaths[i].match(new RegExp('[2][0][1-9]{2}'));
+      }
+      document.getElementById("header").innerHTML = "Number of Mass Shootings per State in " + yearString;
+      createUSMap();
     }
 
     // https://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object?page=1&tab=votes#tab-top
@@ -45,112 +167,107 @@
       return copy;
     }
 
-    var dataPaths = ["../data/mass_shootings_2014.csv", "../data/mass_shootings_2015.csv",
-                     "../data/mass_shootings_2016.csv", "../data/mass_shootings_2017.csv",
-                     "../data/mass_shootings_2018.csv"];
+    function createUSMap() {
+      var max_incidents = -1;
 
-    var incidents = [];
-    var names = {};
-    var activeYear = 3;
+      var svg = d3.select("svg");
 
-    var max_incidents = -1;
+      var path = d3.geoPath();
 
-    var svg = d3.select("svg");
-
-    var path = d3.geoPath();
-
-    d3.tsv("../data/us-state-names.tsv", function(tsv) {
-      // extract just the names and Ids
-      tsv.forEach(function(d,i) {
-        names[+d.id] = d.name;
+      d3.tsv("../data/us-state-names.tsv", function(tsv) {
+        // extract just the names and Ids
+        tsv.forEach(function(d,i) {
+          names[+d.id] = d.name;
+        });
       });
-    });
 
-    d3.json("https://d3js.org/us-10m.v1.json", function(error, us) {
-    if (error) throw error;
+      d3.json("https://d3js.org/us-10m.v1.json", function(error, us) {
+      if (error) throw error;
 
-    var parseTime = d3.timeParse("%B %d, %Y");
+      var parseTime = d3.timeParse("%B %d, %Y");
 
-    d3.queue()
-      .defer(d3.csv, dataPaths[0])
-      .defer(d3.csv, dataPaths[1])
-      .defer(d3.csv, dataPaths[2])
-      .defer(d3.csv, dataPaths[3])
-      //.defer(d3.csv, dataPaths[4])
-      .awaitAll(function (error, d) {
+      d3.queue()
+        .defer(d3.csv, dataPaths[0])
+        .defer(d3.csv, dataPaths[1])
+        .defer(d3.csv, dataPaths[2])
+        .defer(d3.csv, dataPaths[3])
+        .defer(d3.csv, dataPaths[4])
+        .awaitAll(function (error, d) {
+          for(var i = 0; i < d.length; ++i) {
+            for(var j = 0; j < d[i].length; ++j) {
+              d[i][j].date = parseTime(d[i][j]["Incident Date"]);
+              d[i][j].killed = +d[i][j]["# Killed"];
+              d[i][j].injured = +d[i][j]["# Injured"];
+              d[i][j].state = d[i][j]["State"];
+              d[i][j].city = d[i][j]["City Or County"];
+            }
+          }
+
+        // nest data by state
         for(var i = 0; i < d.length; ++i) {
-          for(var j = 0; j < d[i].length; ++j) {
-            d[i][j].date = parseTime(d[i][j]["Incident Date"]);
-            d[i][j].killed = +d[i][j]["# Killed"];
-            d[i][j].injured = +d[i][j]["# Injured"];
-            d[i][j].state = d[i][j]["State"];
-            d[i][j].city = d[i][j]["City Or County"];
+          var incidentsByState = d3.nest()
+            .key(function(d) { return d.state; }).sortKeys(d3.ascending)
+            .rollup(function(s) { return {
+              total_incidents: s.length, // amount of incidents in a state
+              total_killed: d3.sum(s, function(d) { return d.killed; }),
+              total_injured: d3.sum(s, function(d) { return d.injured }),
+            }; })
+            .entries(d[i]);
+
+            incidents.push(clone(incidentsByState)); // (hack) save copy for every year in incidents
+        }
+
+        // console.log(incidents);
+
+        // calculate max amount of incidents
+        var max = 0;
+        for(var i = 0; i < incidents.length; ++i){
+          max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
+          if(max_incidents < max) {
+            max_incidents = max;
           }
         }
 
-      // nest data by state
-      for(var i = 0; i < d.length; ++i) {
-        var incidentsByState = d3.nest()
-          .key(function(d) { return d.state; }).sortKeys(d3.ascending)
-          .rollup(function(s) { return {
-            total_incidents: s.length, // amount of incidents in a state
-            total_killed: d3.sum(s, function(d) { return d.killed; }),
-            total_injured: d3.sum(s, function(d) { return d.injured }),
-          }; })
-          .entries(d[i]);
+        // console.log(names);
 
-          incidents.push(clone(incidentsByState)); // (hack) save copy for every year in incidents
-      }
+        var colors = d3.scaleLinear()
+          .domain([0,max_incidents])
+          //.range(["#5E4FA2",  "#9E0142"]);
+          .range(["lightblue", "darkblue"]);
 
-      console.log(incidents);
+        function calculateGradientColor(id) {
+          var id_num = parseInt(id);
+          var state = names[id_num];
 
-      // calculate max amount of incidents
-      var max = 0;
-      for(var i = 0; i < incidents.length; ++i){
-        max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
-        if(max_incidents < max) {
-          max_incidents = max;
-        }
-      }
-
-      console.log(names);
-
-
-      var colors = d3.scaleLinear()
-        .domain([0,max_incidents])
-        //.range(["#5E4FA2",  "#9E0142"]);
-        .range(["lightblue", "darkblue"]);
-
-      function calculateGradientColor(id) {
-        var id_num = parseInt(id);
-        var state = names[id_num];
-
-        for (var i = 0; i < incidents[activeYear].length; ++i) {
-          if (incidents[activeYear][i].key == state) {
-            console.log("match: " + state);
-            console.log(incidents[activeYear][i].value.total_incidents);
-            return colors(incidents[activeYear][i].value.total_incidents);
+          for (var i = 0; i < incidents[activeYear].length; ++i) {
+            if (incidents[activeYear][i].key == state) {
+              return colors(incidents[activeYear][i].value.total_incidents);
+            }
           }
+          return "lightgray"; // no incidents happened in the state
         }
-        return "lightgray"; // no incidents happened in the state
-      }
 
-      svg.append("g")
-          .attr("class", "states")
-        .selectAll("path")
-        .data(topojson.feature(us, us.objects.states).features)
-        .enter().append("path")
-          .attr("d", path)
-          .attr("fill", function(d) { return calculateGradientColor(d.id)});
+        svg.append("g")
+            .attr("class", "states")
+          .selectAll("path")
+          .data(topojson.feature(us, us.objects.states).features)
+          .enter().append("path")
+            .attr("d", path)
+            .attr("fill", function(d) { return calculateGradientColor(d.id) });
+            // .transition()
+            // .duration(300)
+            // .style("fill", function(d) { return calculateGradientColor(d.id) });
 
-      svg.append("path")
-          .attr("class", "state-borders")
-          .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
-    });
+        svg.append("path")
+            .attr("class", "state-borders")
+            .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
+      });
+
+      });
+
+    }
 
 
-
-    });
   </script>
 </body>
 </html>
