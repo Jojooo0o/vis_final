@@ -26,7 +26,21 @@
       overflow: hidden;
     }
 
-    menu {
+    #value {
+      border: none;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      break-before: always;
+      padding-left: 10px;
+    }
+
+    #value > label {
+      margin-right: 25px;
+      color: black;
+    }
+
+    #year {
       float: left;
       margin-left: 30px;
     }
@@ -102,14 +116,30 @@
 </style>
   </style>
 </head>
-<body onLoad="changeYear(0)">
-  <h1 id="header">Number of Mass Shootings per State in 2014</h1>
+<body onLoad="initializeMap(0, 0)">
+  <h1>Mass Shootings per State</h1>
+  <h2 id="header"></h2>
   <div class="content">
+    <h1>Show number of</h1>
+    <menu id="value">
+      <label class="container" onClick="changeValue(0)">Incidents
+        <input id="firstValueBtn" type="radio" checked="checked" name="radioValue">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container" onClick="changeValue(1)">People Killed
+        <input type="radio" name="radioValue">
+        <span class="checkmark"></span>
+      </label>
+      <label class="container" onClick="changeValue(2)">People Injured
+        <input type="radio" name="radioValue">
+        <span class="checkmark"></span>
+      </label>
+    </menu>
     <svg width="960" height="600"></svg>
-    <menu>
+    <menu id="year">
       <h1>Years</h1>
       <label class="container" onClick="changeYear(0)">2014
-        <input id="firstBtn" type="radio" checked="checked" name="radio">
+        <input id="firstYearBtn" type="radio" checked="checked" name="radio">
         <span class="checkmark"></span>
       </label>
       <label class="container" onClick="changeYear(1)">2015
@@ -141,19 +171,58 @@
     var incidents = [];
     var names = {};
     var activeYear = 0;
+    var activeValue = 0;
+
+    function initializeMap(year, value) {
+      changeYear(year);
+      changeValue(value);
+    }
+
+    function changeHeader() {
+      // create string that informs user about the information that is displayed
+      var valueString = "";
+      var yearString  = "";
+
+      switch(activeValue) {
+      case 1:
+        valueString = "Number of People killed in ";
+        break;
+      case 2:
+        valueString = "Number of People injured in ";
+        break;
+      default:
+        valueString = "Number of Mass Shootings in ";
+      }
+
+      for (var i = 0; i <= activeYear; ++i) {
+        yearString = dataPaths[i].match(new RegExp('[2][0][1-9]{2}'));
+      }
+
+      document.getElementById("header").innerHTML = valueString + yearString;
+    }
+
+    function changeValue(value) {
+      // change the value of visualization
+      activeValue = value;
+
+      if (activeValue == 0) {
+        document.getElementById("firstValueBtn").checked = true;
+      }
+
+      changeHeader();
+      createUSMap();
+    }
 
     function changeYear(year) {
+      // change the year of visualization
       var yearString = "";
       activeYear = year;
 
       if (activeYear == 0) {
-        document.getElementById("firstBtn").checked = true;
+        document.getElementById("firstYearBtn").checked = true;
       }
 
-      for (var i = 0; i <= year; ++i) {
-        yearString = dataPaths[i].match(new RegExp('[2][0][1-9]{2}'));
-      }
-      document.getElementById("header").innerHTML = "Number of Mass Shootings per State in " + yearString;
+      changeHeader();
       createUSMap();
     }
 
@@ -168,7 +237,7 @@
     }
 
     function createUSMap() {
-      var max_incidents = -1;
+      var max_stats = -1;
 
       var svg = d3.select("svg");
 
@@ -219,21 +288,39 @@
 
         // console.log(incidents);
 
-        // calculate max amount of incidents
+        // calculate max amount of the chosen display value and choose the display color
         var max = 0;
+        var color_max = "";
+        var color_min = "";
         for(var i = 0; i < incidents.length; ++i){
-          max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
-          if(max_incidents < max) {
-            max_incidents = max;
+          switch (activeValue) {
+            case 1:
+              max = d3.max(incidents[i], function(data) { return data.value.total_killed});
+              color_min = "lightpink";
+              color_max = "red";
+              break;
+            case 2:
+              max = d3.max(incidents[i], function(data) { return data.value.total_injured});
+              color_min = "lightgreen";
+              color_max = "green";
+              break;
+            default:
+              max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
+              color_min = "lightblue";
+              color_max = "darkblue";
+              break;
+          }
+          if(max_stats < max) {
+            max_stats = max;
           }
         }
 
         // console.log(names);
 
         var colors = d3.scaleLinear()
-          .domain([0,max_incidents])
+          .domain([1, max_stats])
           //.range(["#5E4FA2",  "#9E0142"]);
-          .range(["lightblue", "darkblue"]);
+          .range([color_min, color_max]);
 
         function calculateGradientColor(id) {
           var id_num = parseInt(id);
@@ -241,7 +328,17 @@
 
           for (var i = 0; i < incidents[activeYear].length; ++i) {
             if (incidents[activeYear][i].key == state) {
-              return colors(incidents[activeYear][i].value.total_incidents);
+              switch (activeValue) {
+                case 1:
+                  return colors(incidents[activeYear][i].value.total_killed);
+                  break;
+                case 2:
+                  return colors(incidents[activeYear][i].value.total_injured);
+                  break;
+                default:
+                  return colors(incidents[activeYear][i].value.total_incidents);
+                  break;
+              }
             }
           }
           return "lightgray"; // no incidents happened in the state
