@@ -3,31 +3,30 @@
 //        2. hide or show coordinate system (bool)
 //        3. color for the graph
 //        4. min and max boundary
+// define orientation
+var margin = {top: 50, right: 50, bottom: 50, left: 50};
+var width = 1600 - margin.left - margin.right;
+var height = 600 - margin.top - margin.bottom;
+
+// define axis boundaries
+var x = d3.scaleTime().range([0, width]);
+var y = d3.scaleLog().range([height, 0]);
+
+// define line creation
+var line = d3.line()
+.x(function(data) {return x(data.date);})
+.y(function(data) {return y(data.killed + data.injured);});
+
 
 function drawLineGraph(data, year_data, hide, color1, boundary) {
 
   // console.log(year_data);
-
-  // define orientation
-  var margin = {top: 50, right: 50, bottom: 50, left: 50};
-  var width = 1600 - margin.left - margin.right;
-  var height = 600 - margin.top - margin.bottom;
-
-  // define axis boundaries
-  var x = d3.scaleTime().range([0, width]);
-  var y = d3.scaleLog().range([height, 0]);
-
-  // define line creation
-  var line = d3.line()
-    .x(function(data) {return x(data.date);})
-    .y(function(data) {return y(data.killed + data.injured);});
-
   // create svg
   var svg = d3.select("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   // create infobox for further information
   var div = d3.select("body").append("div")
@@ -48,7 +47,6 @@ function drawLineGraph(data, year_data, hide, color1, boundary) {
   data[data.length-1].date = new Date(first_date);
 
   // calculate y scale
-  console.log(boundary[0]);
   y.domain([boundary[0] - boundary[0] * 0.1, boundary[1]]);
 
   // storage for year data (careful, pointy pointer shit, use copy)
@@ -66,7 +64,9 @@ function drawLineGraph(data, year_data, hide, color1, boundary) {
       svg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(x_axis)
-        .remove();
+        .attr("opacity", 0)
+        .attr("class", "x");
+        // .remove();
 
       // y axis
       svg.append("g")
@@ -87,6 +87,7 @@ function drawLineGraph(data, year_data, hide, color1, boundary) {
       svg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(x_axis)
+        .attr("class", "x");
 
       // x grid ------------------------------------------------------------ bug: last line
       svg.append("g")
@@ -100,6 +101,7 @@ function drawLineGraph(data, year_data, hide, color1, boundary) {
       svg.append("g")
         .call(d3.axisLeft(y)
           .tickFormat(d3.format("d")))
+          .attr("class", "y")
         .append("text")
         .attr("text-anchor", "end")
         .attr("fill", "#000")
@@ -110,27 +112,23 @@ function drawLineGraph(data, year_data, hide, color1, boundary) {
 
     }
 
-    console.log(year_data);
+    // console.log(year_data);
 
       svg.append("path")
         .attr("class", "line")
         .attr("d", line(data))
+        .attr("day", line(data))
+        .attr("year", line(year_data))
+        .attr("id", 1)
         .attr("stroke", color1)
         .attr("stroke-linejoin", "round") //test it
         .attr("stroke-linecap", "round") //test it
-        .attr("stroke-width", 1.5)
-        .transition()
-          .delay(2000)
-          .duration(2000)
-          .attrTween("d", function(d) {
-            var current_line = this.getAttribute("d");
-            var new_line = line(year_data);
-            return d3.interpolatePath(current_line, new_line);
-          });
+        .attr("stroke-width", 1.5);
 
-      svg.selectAll("dot")
+      svg.selectAll("circle")
         .data(data)
         .enter().append("circle")
+        .attr("class", "circle")
         .attr("r", 4.5)
         .attr("fill", color1)
         .attr("cx", function(d) { return x(d.date);})
@@ -147,23 +145,70 @@ function drawLineGraph(data, year_data, hide, color1, boundary) {
           div.transition()
             .duration(500)
             .style("opactiy", 0);});
-//     svg.append("g")
-//       .attr("class", "grid")
-//       .attr("transform", "translate(0,"+ height +")")
-//       .call(d3.axisBottom(x)
-//       .tickSize(-height)
-//       .tickFormat(""));
-//
-//     svg.append("g")
-//       .call(d3.axisLeft(y)
-//         .tickFormat(d3.format("d")))
-//       .append("text")
-//       .attr("fill", "#000")
-//       .attr("transform", "rotate(-90)")
-//       .attr("y", 6)
-//       .attr("dy", "0.71em")
-//       .attr("text-anchor", "end")
-//       .text("Killed / Injured");
-//   }
-//
+}
+
+function updateGraph(input, data, boundary, index) {
+
+  var svg = d3.select("svg");
+
+  y.domain([boundary[0] - boundary[0] * 0.1, boundary[1]]);
+
+  svg.selectAll(".y")
+    .transition()
+    .duration(2000)
+    .call(d3.axisLeft(y)
+      .tickFormat(d3.format("d")))
+
+  // store first and last date to define the max border
+  var last_date = data[0].date.toString();
+  var first_date = data[data.length-1].date.toString();
+  data[0].date.setMonth(11,31);
+  data[data.length-1].date.setMonth(0,1);
+
+  // calculate x scale
+  x.domain(d3.extent(data, function(d) {return d.date;}));
+
+  // change back date
+  data[0].date = new Date(last_date);
+  data[data.length-1].date = new Date(first_date);
+
+  // console.log(last_date);
+  // console.log(first_date);
+  // console.log(x.domain());
+
+  var x_axis = d3.axisBottom(x)
+    .tickFormat(function(d) {
+      return d3.timeFormat("%B")(d)
+    });
+
+  // console.log(svg);
+  // console.log(svg.selectAll(".x"));
+
+  var get_x_axis = svg.select(function(){
+    return this.childNodes[index];
+  }).selectAll(".x");
+  console.log(get_x_axis);
+
+  get_x_axis.transition()
+  .duration(2000)
+  .call(x_axis);
+
+  var datapoints = svg.selectAll(".circle");
+  datapoints.remove();
+
+  line = d3.line()
+    .x(function(data) {return x(data.date);})
+    .y(function(data) {return y(data.killed + data.injured);});
+
+  var get_line = svg.select(function(){
+    return this.childNodes[index];
+  }).selectAll(".line");
+  get_line.transition()
+    .duration(2000)
+    .attrTween("d", function(d) {
+      var current_line = this.getAttribute("d");
+      // var new_line = this.getAttribute(input);
+      var new_line = line(data);
+      return d3.interpolatePath(current_line, new_line);
+    });
 }

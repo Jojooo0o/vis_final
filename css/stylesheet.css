@@ -2,6 +2,10 @@
   border: 1px solid lightgray;
 }
 
+.cirlce {
+  r: 4.5;
+}
+
 .line {
   fill: none;
   /* stroke: steelblue; */

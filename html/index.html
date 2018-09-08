@@ -15,6 +15,63 @@
 <body>
   <h1>Mass Shootings 2014 - 2017</h1>
   <svg onload="processData()"></svg>
-  <!-- <svg onload="test()"></svg> -->
+  <menu>
+    <form action="" method="post">
+      <h3>Years</h3>
+      <div>
+        <button onclick="callYearly(); return false">Click me!</button>
+      </div>
+      <div>
+        <button onclick="callDayly(); return false">Click me!</button>
+      </div>
+      <div>
+        <input type="checkbox" id="year2018" value="2018"/>
+        <label for="year2018">2018</label>
+      </div>
+      <div>
+        <input type="checkbox" id="year2017" value="2017"/>
+        <label for="year2017">2017</label>
+      </div>
+      <div>
+        <input type="checkbox" id="year2016" value="2016"/>
+        <label for="year2016">2016</label>
+      </div>
+      <div>
+        <input type="checkbox" id="year2015" value="2015"/>
+        <label for="year2015">2015</label>
+      </div>
+      <div>
+        <input type="checkbox" id="year2016" value="2014"/>
+        <label for="year2018">2014</label>
+      </div>
+    </form>
+
+    <form action="" method="post">
+      <h3>Victims</h3>
+        <div>
+          <input class="checkboxes" type="checkbox" name="killed" id="killedCheck"/>
+          <label for="killedCheck">Killed</label>
+        </div>
+        <div>
+          <input type="checkbox" name="injured" id="injuredCheck"/>
+          <label for="injuredCheck">Injured</label>
+        </div>
+    </form>
+    <form action="" method="post">
+      <h3>Overview</h3>
+      <div>
+        <input class="checkboxes" type="checkbox" name="Year" id="yearlyCheck"/>
+        <label for="yearlyCheck">Year</label>
+      </div>
+      <div>
+        <input class="checkboxes" type="checkbox" name="Month" id="monthlyCheck"/>
+        <label for="monthlyCheck">Month</label>
+      </div>
+      <div>
+        <input class="checkboxes" type="checkbox" name="Day" id="daylyCheck"/>
+        <label for="daylyCheck">Day</label>
+      </div>
+    </form>
+  </menu>
 </body>
 </html>
