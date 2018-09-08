@@ -174,8 +174,23 @@
     var activeValue = 0;
 
     function initializeMap(year, value) {
-      changeYear(year);
-      changeValue(value);
+      // change the year of visualization
+      var yearString = "";
+      activeYear = year;
+
+      if (activeYear == 0) {
+        document.getElementById("firstYearBtn").checked = true;
+      }
+
+      // change the value of visualization
+      activeValue = value;
+
+      if (activeValue == 0) {
+        document.getElementById("firstValueBtn").checked = true;
+      }
+
+      changeHeader();
+      createUSMap();
     }
 
     function changeHeader() {
@@ -194,36 +209,19 @@
         valueString = "Number of Mass Shootings in ";
       }
 
-      for (var i = 0; i <= activeYear; ++i) {
-        yearString = dataPaths[i].match(new RegExp('[2][0][1-9]{2}'));
+      if (activeYear <= 4) {
+        yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
       }
 
       document.getElementById("header").innerHTML = valueString + yearString;
     }
 
     function changeValue(value) {
-      // change the value of visualization
-      activeValue = value;
-
-      if (activeValue == 0) {
-        document.getElementById("firstValueBtn").checked = true;
-      }
-
-      changeHeader();
-      createUSMap();
+      initializeMap(activeYear, value);
     }
 
     function changeYear(year) {
-      // change the year of visualization
-      var yearString = "";
-      activeYear = year;
-
-      if (activeYear == 0) {
-        document.getElementById("firstYearBtn").checked = true;
-      }
-
-      changeHeader();
-      createUSMap();
+      initializeMap(year, activeValue);
     }
 
     // https://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object?page=1&tab=votes#tab-top
@@ -272,10 +270,13 @@
             }
           }
 
-        // nest data by state
-        for(var i = 0; i < d.length; ++i) {
-          var incidentsByState = d3.nest()
-            .key(function(d) { return d.state; }).sortKeys(d3.ascending)
+          // console.log(d);
+
+          // nest data by state
+          for (var i = 0; i < d.length; ++i) {
+            var incidentsByState = d3.nest()
+            .key(function(d) { return d.state; })
+            .sortKeys(d3.ascending)
             .rollup(function(s) { return {
               total_incidents: s.length, // amount of incidents in a state
               total_killed: d3.sum(s, function(d) { return d.killed; }),
@@ -284,85 +285,84 @@
             .entries(d[i]);
 
             incidents.push(clone(incidentsByState)); // (hack) save copy for every year in incidents
-        }
-
-        // console.log(incidents);
-
-        // calculate max amount of the chosen display value and choose the display color
-        var max = 0;
-        var color_max = "";
-        var color_min = "";
-        for(var i = 0; i < incidents.length; ++i){
-          switch (activeValue) {
-            case 1:
-              max = d3.max(incidents[i], function(data) { return data.value.total_killed});
-              color_min = "lightpink";
-              color_max = "red";
-              break;
-            case 2:
-              max = d3.max(incidents[i], function(data) { return data.value.total_injured});
-              color_min = "Aquamarine";
-              color_max = "LightSeaGreen";
-              break;
-            default:
-              max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
-              color_min = "lightblue";
-              color_max = "darkblue";
-              break;
           }
 
-          if(max_stats < max) {
-            max_stats = max;
-          }
-        }
+          // console.log(incidents);
 
-        // console.log(names);
+          // calculate max amount of the chosen display value and choose the display color
+          var max = 0;
+          var color_max = "";
+          var color_min = "";
+          for(var i = 0; i < incidents.length; ++i){
+            switch (activeValue) {
+              case 1:
+                max = d3.max(incidents[i], function(data) { return data.value.total_killed});
+                color_min = "lightpink";
+                color_max = "red";
+                break;
+              case 2:
+                max = d3.max(incidents[i], function(data) { return data.value.total_injured});
+                color_min = "Aquamarine";
+                color_max = "LightSeaGreen";
+                break;
+              default:
+                max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
+                color_min = "lightblue";
+                color_max = "darkblue";
+                break;
+            }
 
-        var colors = d3.scaleLinear()
-          .domain([1, max_stats])
-          //.range(["#5E4FA2",  "#9E0142"]);
-          .range([color_min, color_max]);
-
-        function calculateGradientColor(id) {
-          var id_num = parseInt(id);
-          var state = names[id_num];
-
-          for (var i = 0; i < incidents[activeYear].length; ++i) {
-            if (incidents[activeYear][i].key == state) {
-              // calculate color of the current state by value
-              switch (activeValue) {
-                case 1:
-                  return colors(incidents[activeYear][i].value.total_killed);
-                  break;
-                case 2:
-                  return colors(incidents[activeYear][i].value.total_injured);
-                  break;
-                default:
-                  return colors(incidents[activeYear][i].value.total_incidents);
-                  break;
-              }
+            if(max_stats < max) {
+              max_stats = max;
             }
           }
-          return "lightgray"; // no incidents happened in the state
-        }
 
-        svg.append("g")
-            .attr("class", "states")
-          .selectAll("path")
-          .data(topojson.feature(us, us.objects.states).features)
-          .enter().append("path")
-            .attr("d", path)
-            .attr("fill", function(d) { return calculateGradientColor(d.id) });
+          // console.log(names);
 
-        svg.append("path")
-            .attr("class", "state-borders")
-            .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
-      });
+          var colors = d3.scaleLinear()
+            .domain([1, max_stats])
+            //.range(["#5E4FA2",  "#9E0142"]);
+            .range([color_min, color_max]);
+
+          function calculateGradientColor(id) {
+            var id_num = parseInt(id);
+            var state = names[id_num];
+
+            for (var i = 0; i < incidents[activeYear].length; ++i) {
+              if (incidents[activeYear][i].key == state) {
+                // calculate color of the current state by value
+                switch (activeValue) {
+                  case 1:
+                    return colors(incidents[activeYear][i].value.total_killed);
+                    break;
+                  case 2:
+                    return colors(incidents[activeYear][i].value.total_injured);
+                    break;
+                  default:
+                    return colors(incidents[activeYear][i].value.total_incidents);
+                    break;
+                }
+              }
+            }
+            return "lightgray"; // no incidents happened in the state
+          }
+
+          svg.append("g")
+              .attr("class", "states")
+            .selectAll("path")
+            .data(topojson.feature(us, us.objects.states).features)
+            .enter().append("path")
+              .attr("d", path)
+              .attr("fill", function(d) { return calculateGradientColor(d.id) });
+
+          svg.append("path")
+              .attr("class", "state-borders")
+              .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
+        });
 
       });
 
     }
-
 
   </script>
 </body>
