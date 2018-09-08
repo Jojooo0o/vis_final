@@ -49,6 +49,19 @@
       float: left;
     }
 
+    div.infobox {
+        position: absolute;
+        text-align: center;
+        width: auto;
+        height: auto;
+        padding: 2px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: none;
+    }
+
     /* radio buttons https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_custom_radio */
     /* The container */
     .container {
@@ -239,6 +252,11 @@
 
       var svg = d3.select("svg");
 
+      // create infobox for further information
+      var div = d3.select("body").append("div")
+        .attr("class", "infobox")
+        .style("opacity", 0);
+
       var path = d3.geoPath();
 
       d3.tsv("../data/us-state-names.tsv", function(tsv) {
@@ -333,18 +351,45 @@
                 // calculate color of the current state by value
                 switch (activeValue) {
                   case 1:
-                    return colors(incidents[activeYear][i].value.total_killed);
+                    if (incidents[activeYear][i].value.total_killed > 0)
+                      return colors(incidents[activeYear][i].value.total_killed);
                     break;
                   case 2:
-                    return colors(incidents[activeYear][i].value.total_injured);
+                    if (incidents[activeYear][i].value.total_injured > 0)
+                      return colors(incidents[activeYear][i].value.total_injured);
                     break;
                   default:
-                    return colors(incidents[activeYear][i].value.total_incidents);
+                    if (incidents[activeYear][i].value.total_incidents > 0)
+                      return colors(incidents[activeYear][i].value.total_incidents);
                     break;
                 }
               }
             }
             return "lightgray"; // no incidents happened in the state
+          }
+
+          function calculateStateInfo(id) {
+            var id_num = parseInt(id);
+            var state = names[id_num];
+
+            yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
+
+            var infoString = "<b>" + state + " " + yearString + "</b>"
+                            + "<br/>Total Incidents: 0"
+                            + "<br/>Total Killed: 0"
+                            + "<br/>Total Injured: 0";
+
+            for (var i = 0; i < incidents[activeYear].length; ++i) {
+              if (incidents[activeYear][i].key == state) {
+                var infoString = "<b>" + state + " " + yearString + "</b>"
+                                + "<br/>Total Incidents: " + incidents[activeYear][i].value.total_incidents
+                                + "<br/>Total Killed: " + incidents[activeYear][i].value.total_killed
+                                + "<br/>Total Injured: " + incidents[activeYear][i].value.total_injured;
+
+                return infoString
+              }
+            }
+            return infoString; // no incidents happened in the state
           }
 
           svg.append("g")
@@ -353,7 +398,21 @@
             .data(topojson.feature(us, us.objects.states).features)
             .enter().append("path")
               .attr("d", path)
-              .attr("fill", function(d) { return calculateGradientColor(d.id) });
+              .attr("fill", function(d) { return calculateGradientColor(d.id) })
+              .on("mouseover", function(d) {
+                div.transition()
+                  .duration(200)
+                  .style("opacity", 0.9);
+                div.html(function(s) { return calculateStateInfo(d.id)} )
+                  .style("left", (d3.event.pageX) + "px")
+                  .style("top", (d3.event.pageY - 25) + "px");
+                })
+              .on("mouseout", function(d) {
+                div.transition()
+                  .duration(200)
+                  .style("opacity", "0.0");
+                div.remove();
+                });
 
           svg.append("path")
               .attr("class", "state-borders")
