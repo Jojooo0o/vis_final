@@ -1,0 +1,162 @@
+/* heatmap_style.css
+   Visualization Course 2018
+   Bauhaus-University Weimar
+*/
+
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400|Raleway:300,400');
+/* font-family: 'Open Sans', sans-serif;
+   font-family: 'Raleway', sans-serif; */
+
+body {
+  font-family: 'Raleway', sans-serif;
+  color: #303030;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Open Sans', sans-serif;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+.states :hover {
+  filter: brightness(90%);
+}
+
+.state-borders {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.75px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.states {
+  fill: lightgray;
+}
+
+.content {
+  overflow: hidden;
+}
+
+#value {
+  border: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  break-before: always;
+  padding-left: 10px;
+}
+
+#value > label {
+  margin-right: 25px;
+  color: black;
+}
+
+#year {
+  float: left;
+  margin-left: 30px;
+}
+
+svg {
+  float: left;
+  height: 750px;
+}
+
+div.infobox {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+/* radio buttons https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_custom_radio */
+/* The container */
+.container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 20px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Hide the browser's default radio button */
+.container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Create a custom radio button */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border-radius: 50%;
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+/* When the radio button is checked, add a blue background */
+.container input:checked ~ .checkmark {
+    background-color: #2196F3;
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show the indicator (dot/circle) when checked */
+.container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.container .checkmark:after {
+  top: 9px;
+  left: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+
+.legendTitle {
+  text-anchor: middle;
+  font-size: 18px;
+  fill: #4F4F4F;
+  font-weight: 300;
+}
+
+.legendRect {
+  margin-top: 1000px;
+}
+
+.axis path,
+.axis tick,
+.axis line {
+  fill: none;
+  stroke: none;
+}
