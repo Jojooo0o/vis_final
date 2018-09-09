@@ -5,9 +5,10 @@
 var dataPaths = ["../data/mass_shootings_2014.csv", "../data/mass_shootings_2015.csv",
                  "../data/mass_shootings_2016.csv", "../data/mass_shootings_2017.csv",
                  "../data/mass_shootings_2018.csv"];
-var incidents = [];
-var names = {};
-var activeYear = 0;
+var incidents = []; // saves incidents with state name as key for each year
+var names = {}; // saves state names
+
+var activeYear = 0; // used for radio buttons
 var activeValue = 0;
 
 function initializeMap(year, value) {
@@ -92,7 +93,7 @@ function createUSMap() {
   // color legend in svg-format
   var legend = svg.append("g")
     .attr("class", "legendWrapper")
-    .attr("transform", "translate(" + 400 + "," + 650 + ")");
+    .attr("transform", "translate(" + 450 + "," + 650 + ")");
 
   // create infobox for further information
   var div = d3.select("body").append("div")
@@ -154,58 +155,54 @@ function createUSMap() {
 
       // calculate max amount of the chosen display value and choose the display color
       var max = 0;
-      var color_max = "";
-      var color_min = "";
+      var gradient_colors;
       for(var i = 0; i < incidents.length; ++i){
         switch (activeValue) {
           case 1:
             max = d3.max(incidents[i], function(data) { return data.value.total_killed});
-            color_min = "lightpink";
-            color_max = "red";
+            gradient_colors = ["#f9f975", "#e76818", "#d7191c"]
             break;
           case 2:
             max = d3.max(incidents[i], function(data) { return data.value.total_injured});
-            color_min = "Aquamarine";
-            color_max = "LightSeaGreen";
+            gradient_colors = ["#FFFFDD", "#3E9583", "#1F2D86"]
             break;
           default:
             max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
-            color_min = "lightblue";
-            color_max = "darkblue";
+            gradient_colors = ["#a8eab2", "#62eae0", "#205f8e"];
             break;
         }
 
-        if(max_stats < max) {
+        if (max_stats < max) {
           max_stats = max;
         }
       }
 
       // console.log(names);
 
-      var colorsYGB = ["#fa3e6c", "#411f63"];
-      var colorRangeYGB = d3.range(0, 1, 1.0 / (colorsYGB.length - 1));
-      colorRangeYGB.push(1);
+      var colors = gradient_colors;
+      var colorRange = d3.range(0, 1, 1.0 / (colors.length - 1));
+      colorRange.push(1);
 
       // define the color gradient
-      var colorScaleYGB = d3.scaleLinear()
-        .domain(colorRangeYGB)
-        .range(colorsYGB)
+      var colorScale = d3.scaleLinear()
+        .domain(colorRange)
+        .range(colors)
         .interpolate(d3.interpolateHcl);
 
       // map data values to the color scale
-      var colorInterpolateYGB = d3.scaleLinear()
+      var colorInterpolate = d3.scaleLinear()
         .domain([1, max_stats])
         .range([0,1]);
 
       // create the gradient
       defs.append("linearGradient")
-        .attr("id", "gradient-ygb-colors")
+        .attr("id", "gradient-colors")
         .attr("x1", "0%").attr("y1", "0%")
         .attr("x2", "100%").attr("y2", "0%")
         .selectAll("stop")
-        .data(colorsYGB)
+        .data(colors)
         .enter().append("stop")
-        .attr("offset", function(d,i) { return i/(colorsYGB.length-1); })
+        .attr("offset", function(d,i) { return i/(colors.length-1); })
         .attr("stop-color", function(d) { return d; });
 
       var legendWidth = 500 * 0.6,
@@ -219,7 +216,7 @@ function createUSMap() {
         //.attr("rx", legendHeight/2)
         .attr("width", legendWidth)
         .attr("height", legendHeight)
-        .style("fill", "url(#gradient-ygb-colors)");
+        .style("fill", "url(#gradient-colors)");
 
       // append legend title
       legend.append("text")
@@ -228,14 +225,14 @@ function createUSMap() {
         .attr("y", -2)
         .text(document.getElementById("header").innerHTML);
 
-      //Set scale for x-axis
+      // set scale for x-axis
       var xScale = d3.scaleLinear()
          .range([0, legendWidth])
          .domain([1,max_stats]);
 
-      //Define x-axis
+      // define X-Axis of legend
       var xAxis = d3.axisBottom(xScale)
-          .ticks(4);  //Set rough # of ticks
+          .ticks(4);
 
       // set x axis
       legend.append("g")
@@ -243,6 +240,7 @@ function createUSMap() {
         .attr("transform", "translate(" + (-legendWidth / 2) + "," + (10 + legendHeight) + ")")
         .call(xAxis);
 
+      // us map interaction
       svg.append("g")
           .attr("class", "states")
         .selectAll("path")
@@ -265,6 +263,7 @@ function createUSMap() {
             // div.remove();
             });
 
+      // state-borders
       svg.append("path")
           .attr("class", "state-borders")
           .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
@@ -280,15 +279,15 @@ function createUSMap() {
             switch (activeValue) {
               case 1:
                 if (incidents[activeYear][i].value.total_killed > 0)
-                  return colorScaleYGB(colorInterpolateYGB(incidents[activeYear][i].value.total_killed));
+                  return colorScale(colorInterpolate(incidents[activeYear][i].value.total_killed));
                 break;
               case 2:
                 if (incidents[activeYear][i].value.total_injured > 0)
-                  return colorScaleYGB(colorInterpolateYGB(incidents[activeYear][i].value.total_injured));
+                  return colorScale(colorInterpolate(incidents[activeYear][i].value.total_injured));
                 break;
               default:
                 if (incidents[activeYear][i].value.total_incidents > 0)
-                  return colorScaleYGB(colorInterpolateYGB(incidents[activeYear][i].value.total_incidents));
+                  return colorScale(colorInterpolate(incidents[activeYear][i].value.total_incidents));
                 break;
             }
           }

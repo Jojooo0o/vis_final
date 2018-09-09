@@ -10,14 +10,20 @@
 body {
   font-family: 'Raleway', sans-serif;
   color: #303030;
+  text-align: center;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Open Sans', sans-serif;
 }
 
-h1, h2 {
+h1 {
   text-align: center;
+}
+
+h2 {
+  margin-left: 65px;
+  font-weight: 300;
 }
 
 .states :hover {
@@ -38,26 +44,23 @@ h1, h2 {
 }
 
 .content {
+  width: 1280px;
   overflow: hidden;
+  text-align: left;
+  margin: 0 auto;
+}
+
+.svgContainer {
+  margin-left: 30px;
 }
 
 #value {
-  border: none;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  break-before: always;
-  padding-left: 10px;
+  margin-top: 70px;
 }
 
-#value > label {
-  margin-right: 25px;
-  color: black;
-}
-
-#year {
+#year, #value {
   float: left;
-  margin-left: 30px;
+  margin-left: 20px;
 }
 
 svg {
@@ -159,4 +162,13 @@ div.infobox {
 .axis line {
   fill: none;
   stroke: none;
+}
+
+.footnote {
+  margin-left: 30px;
+  font-size: 16px;
+}
+
+h1 + p {
+  text-align: center;
 }
