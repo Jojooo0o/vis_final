@@ -213,7 +213,7 @@ function createUSMap() {
 
       var legendWidth = 500 * 0.6,
           legendHeight = 15,
-          legendWidth2 = 20;
+          legendWidth2 = 15;
 
       // create color scale legend
       legendGradient.append("rect")
@@ -280,6 +280,7 @@ function createUSMap() {
         .enter().append("path")
           .attr("d", path)
           .attr("fill", function(d) { return calculateGradientColor(d.id) })
+          .on("click", function(d) { return calculateIncidents(d.id) })
           .on("mouseover", function(d) {
             div.transition()
               .duration(200)
@@ -293,8 +294,7 @@ function createUSMap() {
               .duration(200)
               .style("opacity", "0.0");
             // div.remove();
-            });
-
+          });
       // state-borders
       svg.append("path")
           .attr("class", "state-borders")
@@ -350,6 +350,60 @@ function createUSMap() {
           }
         }
         return infoString; // no incidents happened in the state
+      }
+
+      function calculateIncidents(id) {
+        var id_num = parseInt(id);
+        var state = names[id_num];
+
+        var incidentsByState = [];
+
+        for (var i = 0; i < d.length; ++i) {
+          var incidentsSortedByState = d3.nest()
+          .key(function(d) { return d.state; })
+          .sortKeys(d3.ascending)
+          .entries(d[i]);
+
+          incidentsByState.push(clone(incidentsSortedByState)); // (hack) save copy for every year in incidents
+        }
+
+        var most_killed = -1;
+        var most_injured = -1;
+        var incident_killed;
+        var incident_injured;
+
+        for (var i = 0; i < incidentsByState[activeYear].length; ++i) {
+          if (incidentsByState[activeYear][i].key == state) {
+            for (var j = 0; j < incidentsByState[activeYear][i].values.length; ++j) {
+                if (most_killed < incidentsByState[activeYear][i].values[j].killed) {
+                  most_killed = incidentsByState[activeYear][i].values[j].killed;
+                  incident_killed = incidentsByState[activeYear][i].values[j];
+                }
+                if (most_injured < incidentsByState[activeYear][i].values[j].injured) {
+                  most_injured = incidentsByState[activeYear][i].values[j].injured;
+                  incident_injured = incidentsByState[activeYear][i].values[j];
+                }
+              }
+            }
+          }
+
+          console.log(incident_killed);
+
+          var yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
+          document.getElementById("mostKilled").innerHTML = "Most deaths in Texas Mass Shootings (" +  yearString + ")";
+          document.getElementById("mostKilledInfo").innerHTML = "<b>Incident Date: </b>" + incident_killed["Incident Date"]
+                                                                + "<br/><b>State: </b>" + state
+                                                                + "<br/><b>City or County: </b>" + incident_killed["City Or County"]
+                                                                + "<br/><b>Killed: </b>" + incident_killed["# Killed"]
+                                                                + "<br/><b>Injured: </b>" + incident_killed["# Injured"];
+
+          document.getElementById("mostInjured").innerHTML = "Most injuries in Texas Mass Shootings (" +  yearString + ")";
+          document.getElementById("mostInjuredInfo").innerHTML = "<b>Incident Date: </b>" + incident_injured["Incident Date"]
+                                                                + "<br/><b>State: </b>" + state
+                                                                + "<br/><b>City or County: </b>" + incident_injured["City Or County"]
+                                                                + "<br/><b>Killed: </b>" + incident_injured["# Killed"]
+                                                                + "<br/><b>Injured: </b>" + incident_injured["# Injured"];
+
       }
 
     });
