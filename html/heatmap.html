@@ -4,6 +4,24 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <head>
   <style type="text/css">
+    @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400|Raleway:300,400');
+    /* font-family: 'Open Sans', sans-serif;
+       font-family: 'Raleway', sans-serif;
+    */
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      color: #303030;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
     .states :hover {
       filter: brightness(90%);
     }
@@ -47,6 +65,7 @@
 
     svg {
       float: left;
+      height: 750px;
     }
 
     div.infobox {
@@ -70,7 +89,7 @@
         padding-left: 35px;
         margin-bottom: 12px;
         cursor: pointer;
-        font-size: 22px;
+        font-size: 20px;
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
@@ -126,6 +145,24 @@
     	border-radius: 50%;
     	background: white;
     }
+
+    .legendTitle {
+      text-anchor: middle;
+      font-size: 18px;
+      fill: #4F4F4F;
+      font-weight: 300;
+    }
+
+    .legendRect {
+      margin-top: 1000px;
+    }
+
+    .axis path,
+  	.axis tick,
+    .axis line {
+  		fill: none;
+  		stroke: none;
+  	}
 </style>
   </style>
 </head>
@@ -133,7 +170,7 @@
   <h1>Mass Shootings per State</h1>
   <h2 id="header"></h2>
   <div class="content">
-    <h1>Show number of</h1>
+    <h3>Show number of</h1>
     <menu id="value">
       <label class="container" onClick="changeValue(0)">Incidents
         <input id="firstValueBtn" type="radio" checked="checked" name="radioValue">
@@ -150,7 +187,7 @@
     </menu>
     <svg width="960" height="600"></svg>
     <menu id="year">
-      <h1>Years</h1>
+      <h3>Years</h1>
       <label class="container" onClick="changeYear(0)">2014
         <input id="firstYearBtn" type="radio" checked="checked" name="radio">
         <span class="checkmark"></span>
@@ -229,11 +266,19 @@
       document.getElementById("header").innerHTML = valueString + yearString;
     }
 
+    function updateChart() {
+      // avoid overdrawing by deleting the svg content
+      var svg = d3.select("svg");
+      svg.selectAll("*").remove();
+    }
+
     function changeValue(value) {
+      updateChart();
       initializeMap(activeYear, value);
     }
 
     function changeYear(year) {
+      updateChart();
       initializeMap(year, activeValue);
     }
 
@@ -247,10 +292,20 @@
       return copy;
     }
 
+
     function createUSMap() {
       var max_stats = -1;
 
+      // display map in svg-format
       var svg = d3.select("svg");
+
+      // needed to apply gradients to the visualization
+      var defs = svg.append("defs");
+
+      // color legend in svg-format
+      var legend = svg.append("g")
+      	.attr("class", "legendWrapper")
+      	.attr("transform", "translate(" + 400 + "," + 650 + ")");
 
       // create infobox for further information
       var div = d3.select("body").append("div")
@@ -259,6 +314,7 @@
 
       var path = d3.geoPath();
 
+      // list of state names and ids to attach to map
       d3.tsv("../data/us-state-names.tsv", function(tsv) {
         // extract just the names and Ids
         tsv.forEach(function(d,i) {
@@ -269,8 +325,10 @@
       d3.json("https://d3js.org/us-10m.v1.json", function(error, us) {
       if (error) throw error;
 
+      // create d3 time format from string
       var parseTime = d3.timeParse("%B %d, %Y");
 
+      // get the data 2014 - 2018
       d3.queue()
         .defer(d3.csv, dataPaths[0])
         .defer(d3.csv, dataPaths[1])
@@ -290,7 +348,7 @@
 
           // console.log(d);
 
-          // nest data by state
+          // nest data by state (key)
           for (var i = 0; i < d.length; ++i) {
             var incidentsByState = d3.nest()
             .key(function(d) { return d.state; })
@@ -337,60 +395,68 @@
 
           // console.log(names);
 
-          var colors = d3.scaleLog()
-            .domain([1, max_stats])
-            //.range(["#5E4FA2",  "#9E0142"]);
-            .range([color_min, color_max]);
+          var colorsYGB = ["#2c7bb6", "#00a6ca","#00ccbc","#90eb9d","#ffff8c","#f9d057","#f29e2e","#e76818","#d7191c"];
+          var colorRangeYGB = d3.range(0, 1, 1.0 / (colorsYGB.length - 1));
+          colorRangeYGB.push(1);
 
-          function calculateGradientColor(id) {
-            var id_num = parseInt(id);
-            var state = names[id_num];
+          // define the color gradient
+          var colorScaleYGB = d3.scaleLinear()
+          	.domain(colorRangeYGB)
+          	.range(colorsYGB)
+          	.interpolate(d3.interpolateHcl);
 
-            for (var i = 0; i < incidents[activeYear].length; ++i) {
-              if (incidents[activeYear][i].key == state) {
-                // calculate color of the current state by value
-                switch (activeValue) {
-                  case 1:
-                    if (incidents[activeYear][i].value.total_killed > 0)
-                      return colors(incidents[activeYear][i].value.total_killed);
-                    break;
-                  case 2:
-                    if (incidents[activeYear][i].value.total_injured > 0)
-                      return colors(incidents[activeYear][i].value.total_injured);
-                    break;
-                  default:
-                    if (incidents[activeYear][i].value.total_incidents > 0)
-                      return colors(incidents[activeYear][i].value.total_incidents);
-                    break;
-                }
-              }
-            }
-            return "lightgray"; // no incidents happened in the state
-          }
+          // map data values to the color scale
+          var colorInterpolateYGB = d3.scaleLinear()
+          	.domain([1, max_stats])
+          	.range([0,1]);
 
-          function calculateStateInfo(id) {
-            var id_num = parseInt(id);
-            var state = names[id_num];
+          // create the gradient
+          defs.append("linearGradient")
+          	.attr("id", "gradient-ygb-colors")
+          	.attr("x1", "0%").attr("y1", "0%")
+          	.attr("x2", "100%").attr("y2", "0%")
+          	.selectAll("stop")
+          	.data(colorsYGB)
+          	.enter().append("stop")
+          	.attr("offset", function(d,i) { return i/(colorsYGB.length-1); })
+          	.attr("stop-color", function(d) { return d; });
 
-            yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
+          var legendWidth = 500 * 0.6,
+              legendHeight = 15;
 
-            var infoString = "<b>" + state + " " + yearString + "</b>"
-                            + "<br/>Total Incidents: 0"
-                            + "<br/>Total Killed: 0"
-                            + "<br/>Total Injured: 0";
+          // create color scale legend
+          legend.append("rect")
+          	.attr("class", "legendRect")
+          	.attr("x", -legendWidth/2)
+          	.attr("y", 10)
+          	//.attr("rx", legendHeight/2)
+          	.attr("width", legendWidth)
+          	.attr("height", legendHeight)
+          	.style("fill", "url(#gradient-ygb-colors)");
 
-            for (var i = 0; i < incidents[activeYear].length; ++i) {
-              if (incidents[activeYear][i].key == state) {
-                var infoString = "<b>" + state + " " + yearString + "</b>"
-                                + "<br/>Total Incidents: " + incidents[activeYear][i].value.total_incidents
-                                + "<br/>Total Killed: " + incidents[activeYear][i].value.total_killed
-                                + "<br/>Total Injured: " + incidents[activeYear][i].value.total_injured;
+          // append legend title
+          legend.append("text")
+          	.attr("class", "legendTitle")
+          	.attr("x", 0)
+          	.attr("y", -2)
+          	.text(document.getElementById("header").innerHTML);
 
-                return infoString
-              }
-            }
-            return infoString; // no incidents happened in the state
-          }
+          //Set scale for x-axis
+          var xScale = d3.scaleLinear()
+          	 .range([0, legendWidth])
+          	 .domain([0,100]);
+          	 //.domain([d3.min(pt.legendSOM.colorData)/100, d3.max(pt.legendSOM.colorData)/100]);
+
+          //Define x-axis
+          var xAxis = d3.axisBottom(xScale)
+          	  .ticks(5);  //Set rough # of ticks
+          	  //.tickFormat(formatPercent)
+
+          // set x axis
+          legend.append("g")
+          	.attr("class", "axis")  //Assign "axis" class
+          	.attr("transform", "translate(" + (-legendWidth / 2) + "," + (10 + legendHeight) + ")")
+          	.call(xAxis);
 
           svg.append("g")
               .attr("class", "states")
@@ -417,10 +483,61 @@
           svg.append("path")
               .attr("class", "state-borders")
               .attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
+
+          function calculateGradientColor(id) {
+            // calculate the color value on the color scale
+            var id_num = parseInt(id);
+            var state = names[id_num];
+
+            for (var i = 0; i < incidents[activeYear].length; ++i) {
+              if (incidents[activeYear][i].key == state) {
+                // calculate color of the current state by value
+                switch (activeValue) {
+                  case 1:
+                    if (incidents[activeYear][i].value.total_killed > 0)
+                      return colorScaleYGB(colorInterpolateYGB(incidents[activeYear][i].value.total_killed));
+                    break;
+                  case 2:
+                    if (incidents[activeYear][i].value.total_injured > 0)
+                      return colorScaleYGB(colorInterpolateYGB(incidents[activeYear][i].value.total_injured));
+                    break;
+                  default:
+                    if (incidents[activeYear][i].value.total_incidents > 0)
+                      return colorScaleYGB(colorInterpolateYGB(incidents[activeYear][i].value.total_incidents));
+                    break;
+                }
+              }
+            }
+            return "lightgray"; // no incidents happened in the state
+          }
+
+          function calculateStateInfo(id) {
+            // connect state visualization to the saved information about the state
+            var id_num = parseInt(id);
+            var state = names[id_num];
+
+            yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
+
+            var infoString = "<b>" + state + " " + yearString + "</b>"
+                            + "<br/>Total Incidents: 0"
+                            + "<br/>Total Killed: 0"
+                            + "<br/>Total Injured: 0";
+
+            for (var i = 0; i < incidents[activeYear].length; ++i) {
+              if (incidents[activeYear][i].key == state) {
+                var infoString = "<b>" + state + " " + yearString + "</b>"
+                                + "<br/>Total Incidents: " + incidents[activeYear][i].value.total_incidents
+                                + "<br/>Total Killed: " + incidents[activeYear][i].value.total_killed
+                                + "<br/>Total Injured: " + incidents[activeYear][i].value.total_injured;
+
+                return infoString
+              }
+            }
+            return infoString; // no incidents happened in the state
+          }
+
         });
-
       });
-
     }
 
   </script>
