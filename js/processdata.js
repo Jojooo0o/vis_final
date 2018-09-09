@@ -1,30 +1,40 @@
+// tons of data transformation incoming!
+// but first some variables
+
+// defines the source data
 var dataPaths = ["../data/mass_shootings_2014.csv", "../data/mass_shootings_2015.csv",
                  "../data/mass_shootings_2016.csv", "../data/mass_shootings_2017.csv",
-                 "../data/mass_shootings_2018.csv"];     // saves paths of data sets
+                 "../data/mass_shootings_2018.csv"];
 
+// defines some colors
 var lineColors = ["red", "blue", "green", "yellow", "orange", "black", "black", "black", "black", "black"];
 
-
+// set some more stuff
 var parseTime = d3.timeParse("%B %d, %Y");
 var formatTime = d3.timeFormat("%B %d");
 var formatTimeMonthYear = d3.timeFormat("%B %Y");
 var formatTimeNormal = d3.timeFormat("%B %d, %Y");
 var parseAgain = d3.timeParse("%B %d");
+// also some empty global arrays, will be filled later
 var dayly = [];
 var yearly = [];
-
 var year_data = [];
 var month_data = [];
 var day_data = [];
 var show_data = [];
+// only relevant for the non logarithmic scale, which is disabled...
 var show_types = [true, true];
-
+// cuz we need that
 var delete_points = false;
-
+// that one too
 var current_graphic;
 
+// lets process some data
+// takes all source files and processes them, dont forget to append the queue
+// if you want to add more source files
 function processData() {
 
+// parallel data gathering
   d3.queue()
     .defer(d3.csv, dataPaths[0])
     .defer(d3.csv, dataPaths[1])
@@ -32,11 +42,13 @@ function processData() {
     .defer(d3.csv, dataPaths[3])
     .defer(d3.csv, dataPaths[4])
     .awaitAll(function (error, d) {
+      // should make independet (non referenced) copies ...
       day_data = JSON.parse(JSON.stringify(d));
       month_data = JSON.parse(JSON.stringify(d));
       year_data = JSON.parse(JSON.stringify(d));
       for(var i = 0; i < d.length; ++i) {
         for(var j = 0; j < d[i].length; ++j) {
+          // add some data to to access later (yes, kinda useless we know)
           d[i][j].date = parseTime(d[i][j]["Incident Date"]);
           d[i][j].killed = +d[i][j]["# Killed"];
           d[i][j].injured = +d[i][j]["# Injured"];
@@ -51,13 +63,14 @@ function processData() {
           year_data[i][j].injured = +d[i][j]["# Injured"];
         }
       }
-
+      // change the structure of the arrays to be more useful for us
       for(var i = 0; i < year_data.length; ++i) {
         year_data[i] = calcYearOverview(year_data[i]);
         month_data[i] = calcMonthView(month_data[i]);
         show_data.push(true);
       }
 
+      // just calc some borders
       dayly = calcBorders(d);
       yearly = calcBorders(year_data);
       monthly = calcBordersMonth(d, 0);
@@ -66,6 +79,7 @@ function processData() {
       for(var i = 1; i < d.length; ++i) {
         drawLineGraph(d[i], year_data[i], true, lineColors[i], dayly, i);
       }
+      // and do that stuff here, you will thank yourself later
       current_graphic = ["dayly"];
 
       // call functions in here to use data ... cuz storing in global variables aint gonna work brah
@@ -93,6 +107,7 @@ function calcYearOverview(data) {
   return new_data;
 }
 
+// recalculate the data for the months
 function calcMonthView(data) {
   var new_data = [];
   var new_month = [];
@@ -135,6 +150,7 @@ function calcBorders(data) {
   return [min_injured_killed, max_injured_killed];
 }
 
+// and since structure differs, do the same as at calcBorders() just matching to the month
 function calcBordersMonth(data, month) {
   var max_injured_killed = 0;
   var min_injured_killed = 10000;
@@ -153,6 +169,7 @@ function calcBordersMonth(data, month) {
   return [min_injured_killed, max_injured_killed];
 }
 
+// call the damn year! calls updateGraph() to show year data
 async function callYearly() {
   delete_points = true;
   yearly = calcBorders(year_data);
@@ -168,6 +185,7 @@ async function callYearly() {
   current_graphic = ["yearly"];
 }
 
+// calls updateGraph() to show day data (so whole year in days)
 async function callDayly() {
   delete_points = true;
   dayly = calcBorders(day_data);
@@ -183,6 +201,7 @@ async function callDayly() {
   current_graphic = ["dayly"];
 }
 
+// you got it ;) show the month
 async function callMonthly(month) {
   delete_points = true;
   for(var i = 0; i < year_data.length; ++i) {
@@ -210,22 +229,25 @@ async function callMonthly(month) {
   }
   current_graphic = ["monthly", month];
 }
-
+// since javascript and i aint gonna become friends ... let it sleep a little
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
+// switch on and of single years in the graph
 function toggleYears(id, arrayPos) {
   show_data[arrayPos] = document.getElementById(id).checked;
   currentGraphShown();
 }
 
+// would switch on and off injures / kills, but since this aint working with log... not in use
 function toggleTypes(id, arrayPos) {
   show_types[arrayPos] = document.getElementById(id).checked;
   currentGraphShown();
 }
 
+// helper function to clean up code a little
+// i know, its a mess, pls dont tell anyone
 function currentGraphShown() {
   if(current_graphic[0] === "monthly" ) {
     callMonthly(current_graphic[1]);
@@ -236,6 +258,8 @@ function currentGraphShown() {
   }
 }
 
+// important for different types... since it aint working with log...
+// only uses default aka value = d.injured + d.killed
 function resultSelector(d) {
   var value;
   if(show_types[0] == true && show_types[1] == false) {
