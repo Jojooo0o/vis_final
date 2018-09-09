@@ -167,7 +167,7 @@
   </style>
 </head>
 <body onLoad="initializeMap(0, 0)">
-  <h1>Mass Shootings per State</h1>
+  <h1>Mass Shootings in the US</h1>
   <h2 id="header"></h2>
   <div class="content">
     <h3>Show number of</h1>
@@ -395,7 +395,7 @@
 
           // console.log(names);
 
-          var colorsYGB = ["#2c7bb6", "#00a6ca","#00ccbc","#90eb9d","#ffff8c","#f9d057","#f29e2e","#e76818","#d7191c"];
+          var colorsYGB = ["#fa3e6c", "#411f63"];
           var colorRangeYGB = d3.range(0, 1, 1.0 / (colorsYGB.length - 1));
           colorRangeYGB.push(1);
 
@@ -444,13 +444,11 @@
           //Set scale for x-axis
           var xScale = d3.scaleLinear()
           	 .range([0, legendWidth])
-          	 .domain([0,100]);
-          	 //.domain([d3.min(pt.legendSOM.colorData)/100, d3.max(pt.legendSOM.colorData)/100]);
+          	 .domain([1,max_stats]);
 
           //Define x-axis
           var xAxis = d3.axisBottom(xScale)
-          	  .ticks(5);  //Set rough # of ticks
-          	  //.tickFormat(formatPercent)
+          	  .ticks(4);  //Set rough # of ticks
 
           // set x axis
           legend.append("g")
