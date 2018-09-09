@@ -90,8 +90,14 @@ function createUSMap() {
   // needed to apply gradients to the visualization
   var defs = svg.append("defs");
 
-  // color legend in svg-format
+  // /!\ Hacker time:
+  // append gray rectangle to gradient scale legend for 0 value
   var legend = svg.append("g")
+    .attr("class", "legendGrey")
+    .attr("transform", "translate(" + 300 + "," + 650 + ")");
+
+  // color legend in svg-format
+  var legendGradient = svg.append("g")
     .attr("class", "legendWrapper")
     .attr("transform", "translate(" + 450 + "," + 650 + ")");
 
@@ -168,7 +174,7 @@ function createUSMap() {
             break;
           default:
             max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
-            gradient_colors = ["#a8eab2", "#62eae0", "#205f8e"];
+            gradient_colors = ["#8be5ba", "#73a2c6", "#917dd8"];
             break;
         }
 
@@ -206,10 +212,11 @@ function createUSMap() {
         .attr("stop-color", function(d) { return d; });
 
       var legendWidth = 500 * 0.6,
-          legendHeight = 15;
+          legendHeight = 15,
+          legendWidth2 = 20;
 
       // create color scale legend
-      legend.append("rect")
+      legendGradient.append("rect")
         .attr("class", "legendRect")
         .attr("x", -legendWidth/2)
         .attr("y", 10)
@@ -219,7 +226,7 @@ function createUSMap() {
         .style("fill", "url(#gradient-colors)");
 
       // append legend title
-      legend.append("text")
+      legendGradient.append("text")
         .attr("class", "legendTitle")
         .attr("x", 0)
         .attr("y", -2)
@@ -234,11 +241,36 @@ function createUSMap() {
       var xAxis = d3.axisBottom(xScale)
           .ticks(4);
 
+      // create color scale legend
+      legend.append("rect")
+        .attr("class", "legendRect")
+        .attr("x", -legendWidth2/2)
+        .attr("y", 10)
+        //.attr("rx", legendHeight/2)
+        .attr("width", legendWidth2)
+        .attr("height", legendHeight)
+        .style("fill", "lightgray");
+
+      // set scale for x-axis
+      var xScale2 = d3.scaleLinear()
+         .range([0, legendWidth2])
+         .domain([0, 0]);
+
+      // define X-Axis of legend
+      var xAxis2 = d3.axisBottom(xScale2)
+          .ticks(1);
+
       // set x axis
-      legend.append("g")
-        .attr("class", "axis")  //Assign "axis" class
+      legendGradient.append("g")
+        .attr("class", "axis")
         .attr("transform", "translate(" + (-legendWidth / 2) + "," + (10 + legendHeight) + ")")
         .call(xAxis);
+
+      // set x axis
+      legend.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + (-legendWidth2 / 2) + "," + (10 + legendHeight) + ")")
+        .call(xAxis2);
 
       // us map interaction
       svg.append("g")
