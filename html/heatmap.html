@@ -337,7 +337,7 @@
 
           // console.log(names);
 
-          var colors = d3.scaleLinear()
+          var colors = d3.scaleLog()
             .domain([1, max_stats])
             //.range(["#5E4FA2",  "#9E0142"]);
             .range([color_min, color_max]);
