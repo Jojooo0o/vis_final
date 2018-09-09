@@ -168,7 +168,7 @@ function createUSMap() {
             break;
           default:
             max = d3.max(incidents[i], function(data) { return data.value.total_incidents});
-            gradient_colors = ["#a8eab2", "#62eae0", "#205f8e"];
+            gradient_colors = ["#8be5ba", "#73a2c6", "#917dd8"];
             break;
         }
 
