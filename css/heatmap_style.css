@@ -172,3 +172,17 @@ div.infobox {
 h1 + p {
   text-align: center;
 }
+
+.moreInformation {
+  display: flex;
+  text-align: center;
+}
+
+.incident {
+  margin: 0 auto;
+  width: 600px;
+}
+
+.incident :last-of-type {
+  flex: 1;
+}

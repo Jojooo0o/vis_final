@@ -367,43 +367,64 @@ function createUSMap() {
           incidentsByState.push(clone(incidentsSortedByState)); // (hack) save copy for every year in incidents
         }
 
-        var most_killed = -1;
-        var most_injured = -1;
+        var no_results = false;
+        var most_killed = 0;
+        var most_injured = 0;
         var incident_killed;
         var incident_injured;
 
         for (var i = 0; i < incidentsByState[activeYear].length; ++i) {
           if (incidentsByState[activeYear][i].key == state) {
             for (var j = 0; j < incidentsByState[activeYear][i].values.length; ++j) {
-                if (most_killed < incidentsByState[activeYear][i].values[j].killed) {
+              if (most_killed < incidentsByState[activeYear][i].values[j].killed) {
                   most_killed = incidentsByState[activeYear][i].values[j].killed;
                   incident_killed = incidentsByState[activeYear][i].values[j];
-                }
-                if (most_injured < incidentsByState[activeYear][i].values[j].injured) {
+              }
+              if (most_injured < incidentsByState[activeYear][i].values[j].injured) {
                   most_injured = incidentsByState[activeYear][i].values[j].injured;
                   incident_injured = incidentsByState[activeYear][i].values[j];
-                }
               }
             }
           }
+        }
 
-          console.log(incident_killed);
+        //console.log(incident_killed);
 
-          var yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
-          document.getElementById("mostKilled").innerHTML = "Most deaths in Texas Mass Shootings (" +  yearString + ")";
-          document.getElementById("mostKilledInfo").innerHTML = "<b>Incident Date: </b>" + incident_killed["Incident Date"]
-                                                                + "<br/><b>State: </b>" + state
-                                                                + "<br/><b>City or County: </b>" + incident_killed["City Or County"]
-                                                                + "<br/><b>Killed: </b>" + incident_killed["# Killed"]
-                                                                + "<br/><b>Injured: </b>" + incident_killed["# Injured"];
+        // double the code - double the fun
+        var yearString = dataPaths[activeYear].match(new RegExp('[2][0][1-9]{2}'));
+        document.getElementById("mostKilled").innerHTML = "Most deaths in " + state + " Mass Shootings (" +  yearString + ")";
+        document.getElementById("mostInjured").innerHTML = "Most injuries in " + state + " Mass Shootings (" +  yearString + ")";
 
-          document.getElementById("mostInjured").innerHTML = "Most injuries in Texas Mass Shootings (" +  yearString + ")";
+        if (incident_killed == null && incident_injured == null) {
+          document.getElementById("mostKilledInfo").innerHTML = "No mass shootings occured in " + state + " " + yearString + ".";
+          document.getElementById("mostInjuredInfo").innerHTML = "No mass shootings occured in " + state + " " + yearString + ".";
+        } else if (incident_killed == null) {
+          document.getElementById("mostKilledInfo").innerHTML = "No people have been killed in mass shootings in " + state + " in " + yearString + ".";
           document.getElementById("mostInjuredInfo").innerHTML = "<b>Incident Date: </b>" + incident_injured["Incident Date"]
                                                                 + "<br/><b>State: </b>" + state
                                                                 + "<br/><b>City or County: </b>" + incident_injured["City Or County"]
                                                                 + "<br/><b>Killed: </b>" + incident_injured["# Killed"]
                                                                 + "<br/><b>Injured: </b>" + incident_injured["# Injured"];
+        } else if (incident_injured == null) {
+          document.getElementById("mostInjuredInfo").innerHTML = "No people have been injured in mass shootings in " + state + " in " + yearString + ".";
+          document.getElementById("mostKilledInfo").innerHTML = "<b>Incident Date: </b>" + incident_killed["Incident Date"]
+                                                                + "<br/><b>State: </b>" + state
+                                                                + "<br/><b>City or County: </b>" + incident_killed["City Or County"]
+                                                                + "<br/><b>Killed: </b>" + incident_killed["# Killed"]
+                                                                + "<br/><b>Injured: </b>" + incident_killed["# Injured"];
+        } else {
+          document.getElementById("mostKilledInfo").innerHTML = "<b>Incident Date: </b>" + incident_killed["Incident Date"]
+          + "<br/><b>State: </b>" + state
+          + "<br/><b>City or County: </b>" + incident_killed["City Or County"]
+          + "<br/><b>Killed: </b>" + incident_killed["# Killed"]
+          + "<br/><b>Injured: </b>" + incident_killed["# Injured"];
 
+          document.getElementById("mostInjuredInfo").innerHTML = "<b>Incident Date: </b>" + incident_injured["Incident Date"]
+          + "<br/><b>State: </b>" + state
+          + "<br/><b>City or County: </b>" + incident_injured["City Or County"]
+          + "<br/><b>Killed: </b>" + incident_injured["# Killed"]
+          + "<br/><b>Injured: </b>" + incident_injured["# Injured"];
+        }
       }
 
     });

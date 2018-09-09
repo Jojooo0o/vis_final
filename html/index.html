@@ -13,50 +13,58 @@
   <link rel="stylesheet" href="../css/stylesheet.css">
 </head>
 <body>
-  <h1>Mass Shootings 2014 - 2017</h1>
-  <svg onload="processData()"></svg>
-  <menu>
-    <form action="" method="post">
-      <h3>Years</h3>
-      <div>
-        <button onclick="callYearly(); return false">Year Overview</button>
-      </div>
-      <div>
-        <button onclick="callDayly(); return false">Day Overview</button>
-      </div>
-      <div>
-        <input onclick="toggleYears(id, 4)" type="checkbox" id="year2018" value="2018" checked="checked"/>
-        <label for="year2018">2018</label>
-      </div>
-      <div>
-        <input onclick="toggleYears(id, 3)" type="checkbox" id="year2017" value="2017" checked="checked"/>
-        <label for="year2017">2017</label>
-      </div>
-      <div>
-        <input onclick="toggleYears(id, 2)" type="checkbox" id="year2016" value="2016" checked="checked"/>
-        <label for="year2016">2016</label>
-      </div>
-      <div>
-        <input onclick="toggleYears(id, 1)" type="checkbox" id="year2015" value="2015" checked="checked"/>
-        <label for="year2015">2015</label>
-      </div>
-      <div>
-        <input onclick="toggleYears(id, 0)" type="checkbox" id="year2014" value="2014" checked="checked"/>
-        <label for="year2014">2014</label>
-      </div>
-    </form>
-    <!-- AINT WORKING WITH LOGARITHMIC SCALE. But since the log scale looks better, we decided to turn the feature of
-    <form action="" method="post">
-      <h3>Victims</h3>
+  <h1>Mass Shootings in the US</h1>
+  <div class="content">
+    <svg onload="processData()"></svg>
+      <div class="filter">
+        <menu>
+          <form action="" method="post">
+          <h3>Years</h3>
+          <label id="check2018" class="container">2018
+            <input onclick="toggleYears(id, 4)" type="checkbox" id="year2018" value="2018" checked="checked"/>
+            <span class="checkmark"></span>
+          </label>
+          <label id="check2017" class="container">2017
+            <input onclick="toggleYears(id, 3)" type="checkbox" id="year2017" value="2017" checked="checked"/>
+            <span class="checkmark"></span>
+          </label>
+          <label id="check2016" class="container">2016
+            <input onclick="toggleYears(id, 2)" type="checkbox" id="year2016" value="2016" checked="checked"/>
+            <span class="checkmark"></span>
+          </label>
+          <label id="check2015" class="container">2015
+            <input onclick="toggleYears(id, 1)" type="checkbox" id="year2015" value="2015" checked="checked"/>
+            <span class="checkmark"></span>
+          </label>
+          <label id="check2014" class="container">2014
+            <input onclick="toggleYears(id, 0)" type="checkbox" id="year2014" value="2014" checked="checked"/>
+            <span class="checkmark"></span>
+          </label>
+        </form>
+      </menu>
+      <menu>
+        <h3>Change View</h3>
         <div>
-          <input onclick="toggleTypes(id, 1)" class="checkboxes" type="checkbox" name="killed" id="killedCheck" checked="checked"/>
-          <label for="killedCheck">Killed</label>
+          <button onclick="callYearly(); return false">Month Scale</button>
         </div>
         <div>
-          <input onclick="toggleTypes(id, 0)" type="checkbox" name="injured" id="injuredCheck" checked="checked"/>
-          <label for="injuredCheck">Injured</label>
+          <button onclick="callDayly(); return false">Day Scale</button>
         </div>
-    </form> -->
-  </menu>
+      </menu>
+        <!-- AINT WORKING WITH LOGARITHMIC SCALE. But since the log scale looks better, we decided to turn the feature of
+        <form action="" method="post">
+          <h3>Victims</h3>
+            <div>
+              <input onclick="toggleTypes(id, 1)" class="checkboxes" type="checkbox" name="killed" id="killedCheck" checked="checked"/>
+              <label for="killedCheck">Killed</label>
+            </div>
+            <div>
+              <input onclick="toggleTypes(id, 0)" type="checkbox" name="injured" id="injuredCheck" checked="checked"/>
+              <label for="injuredCheck">Injured</label>
+            </div>
+        </form> -->
+    </div>
+    <p class="footnote">Data Source: <a href="http://www.gunviolencearchive.org/">http://www.gunviolencearchive.org/</a></p>
+  </div>
 </body>
 </html>
